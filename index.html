@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CLO Gradebook | Hệ thống tính điểm & Sổ điểm tự động</title>
+  <style>
+    :root {font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#17283f; background:#f5f7fb}
+    * {box-sizing:border-box} body {margin:0;line-height:1.55} button,input,select{font:inherit}
+    button{cursor:pointer;border:0} button:disabled{opacity:.5;cursor:not-allowed}
+    .shell{max-width:1300px;margin:auto;padding:28px 22px 60px}
+    .hero{background:linear-gradient(125deg,#123a68,#245b94);border-radius:22px;color:#fff;padding:26px 30px;box-shadow:0 12px 32px #173b6817}
+    .hero h1{font-size:27px;line-height:1.25;margin:6px 0 8px}.hero p{margin:0;color:#d9e9fa;font-size:14px}
+    .topline{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+    .eyebrow{font-size:11px;letter-spacing:1.5px;font-weight:800;color:#a9d2ff}
+    .pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:5px 12px;background:#ffffff21;color:#fff;font-size:12px;font-weight:650}
+    .pill.success{background:#11734e38;color:#a3ffd5;border:1px solid #34d39955}
+    .nav{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}
+    .tab{padding:10px 17px;border-radius:10px;background:#e8edf5;color:#365170;font-weight:750;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+    .tab.active{background:#1f5a96;color:#fff}
+    .tab.highlight{background:#0d8258;color:#fff}
+    .tab.highlight.active{background:#085e3f}
+    .panel{background:#fff;border:1px solid #e2e8f2;border-radius:16px;padding:21px;box-shadow:0 5px 18px #20395308}
+    .panel + .panel{margin-top:16px} .panel h2{margin:0 0 10px;font-size:19px}
+    .muted{color:#64758a;font-size:13px} .small{font-size:12px} .section-head{display:flex;gap:15px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+    .section-head h2{margin:0}.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+    .btn{background:#245e9d;color:#fff;border-radius:9px;padding:10px 14px;font-size:13px;font-weight:750;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
+    .btn:hover{filter:brightness(1.08)}
+    .btn.secondary{background:#ecf2f9;color:#22568c}.btn.outline{border:1px solid #cfdbeb;background:#fff;color:#22568c}
+    .btn.danger{color:#b33535;background:#fff2f2}.btn.tiny{padding:6px 10px;font-size:12px}
+    .btn.success{background:#167347;color:#fff}
+    .btn.large{padding:14px 24px;font-size:15px;border-radius:12px}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+    .stat{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:15px 18px}
+    .stat span{font-size:12px;color:#6a7b8c}.stat strong{display:block;margin-top:4px;font-size:25px;color:#183d63}
+    .stat strong.ok{color:#11734e}.stat strong.warn{color:#c05621}
+    .table-wrap{overflow:auto;width:100%} table{border-collapse:collapse;width:100%;min-width:960px}
+    th,td{padding:11px 10px;border-bottom:1px solid #e9edf3;text-align:left;vertical-align:middle}
+    th{font-size:12px;white-space:nowrap;color:#5c7190;background:#f7f9fc;font-weight:800}
+    td{font-size:13px}.num{text-align:right;font-variant-numeric:tabular-nums}.score{font-weight:800;color:#1b5c90}
+    .score.warning-score{color:#c53030;background:#fff5f5;border-radius:6px;padding:2px 6px}
+    .badge{border-radius:99px;padding:4px 9px;font-size:11px;font-weight:750;display:inline-block}
+    .badge.ok{background:#e3f7ee;color:#11734e}.badge.wait{background:#fff1d5;color:#98671a}.badge.danger{background:#ffebe9;color:#cf222e}
+    .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:10px}
+    label{display:block;font-weight:700;font-size:12px;color:#56697e;margin-bottom:5px}
+    input,select{border:1px solid #cfd9e8;border-radius:9px;padding:9px 10px;background:#fff;color:#17283f;min-width:0;max-width:100%}
+    input:focus,select:focus{outline:2px solid #83b6ed;outline-offset:1px}
+    input[type=number]{width:94px}.wide{min-width:200px;width:100%}
+    .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .hint{padding:13px 14px;background:#eef5fc;color:#274e73;font-size:13px;border-radius:10px;margin:12px 0}
+    .warning{background:#fff4dc;color:#805418}.error{background:#ffe9e9;color:#8b2929}
+    dialog{border:1px solid #d9e4f1;border-radius:18px;padding:0;width:min(650px,95vw);max-height:90vh;box-shadow:0 20px 70px #17283f40}
+    dialog::backdrop{background:#132d49a3}.dialog-body{padding:24px}.dialog-body h2{margin:0 0 8px}
+    .dialog-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:16px;margin-top:18px;border-top:1px solid #e7edf4}
+    .criteria-list{display:grid;grid-template-columns:1fr 100px 100px;align-items:center;gap:11px;margin-top:15px}
+    .criteria-list input{width:100%}.session-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:14px}
+    .session-cell{padding:10px;border:1px solid #dfe7f0;border-radius:10px}.session-cell label{margin-bottom:5px}
+    .session-cell.future{opacity:.52}
+    .actions{display:flex;gap:7px;flex-wrap:wrap}.empty{padding:25px;text-align:center;color:#687b93}
+    .footer{margin-top:24px;font-size:12px;color:#718198;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+    
+    /* Search & Filter Bar */
+    .filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 10px;padding:12px;background:#f8fafc;border-radius:10px;border:1px solid #e9edf3}
+    .search-input{flex:1;min-width:220px;padding:8px 12px;border:1px solid #ccd8e8;border-radius:8px}
+
+    /* Toast thông báo */
+    #toast{position:fixed;bottom:24px;right:24px;background:#17283f;color:#fff;padding:12px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;transform:translateY(100px);opacity:0;transition:all .3s cubic-bezier(.16,1,.3,1);z-index:9999}
+    #toast.show{transform:translateY(0);opacity:1}
+    #toast.success{background:#11734e}
+
+    /* Archive Grid */
+    .archive-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px;margin-top:16px}
+    .archive-card{background:#fff;border:1px solid #dbe4f0;border-radius:14px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;transition:transform .15s,box-shadow .15s}
+    .archive-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(23,40,63,0.08);border-color:#b5cde8}
+    .archive-card.active{border:2px solid #245e9d;background:#f9fbfe}
+    .archive-head{margin-bottom:12px}
+    .archive-head h3{margin:0 0 4px;font-size:16px;color:#183d63}
+    .archive-meta{font-size:12px;color:#64758a;display:flex;flex-direction:column;gap:3px}
+    .archive-stats{display:flex;gap:12px;padding:10px 0;margin:10px 0;border-top:1px solid #f0f3f8;border-bottom:1px solid #f0f3f8;font-size:12px}
+    .archive-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
+
+    /* Upload & Drag Drop Zone */
+    .dropzone{border:2px dashed #97b5d8;border-radius:18px;background:#f3f7fc;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s ease}
+    .dropzone:hover,.dropzone.dragover{border-color:#1f5a96;background:#e7f0fa}
+    .dropzone-icon{font-size:48px;margin-bottom:10px;display:block}
+    .dropzone h3{margin:0 0 6px;color:#183d63;font-size:18px}
+    .dropzone p{margin:0;color:#64758a;font-size:13px}
+    .mapping-box{background:#f8fafc;border:1px solid #e1e8f2;border-radius:14px;padding:18px;margin-top:18px}
+
+    @media(max-width:780px){.shell{padding:14px}.hero{padding:20px}.cards{grid-template-columns:repeat(2,1fr)}.grid2,.grid3{grid-template-columns:1fr}.panel{padding:14px}.criteria-list{grid-template-columns:1fr 70px 70px}.session-grid{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="topline">
+        <div class="eyebrow">HỆ THỐNG SỔ ĐIỂM &amp; TÍNH ĐIỂM TỰ ĐỘNG</div>
+        <span class="pill success" id="dbStatusBadge">🟢 Cơ sở dữ liệu IndexedDB: Sẵn sàng</span>
+      </div>
+      <h1 id="heroTitle">CLO Gradebook — Sổ điểm quá trình</h1>
+      <p>Kéo thả file Excel, tự động nhận diện cột, bấm 1 nút để ra kết quả và lưu trữ bền vững.</p>
+    </header>
+
+    <nav class="nav" id="nav" aria-label="Chức năng chính">
+      <button class="tab highlight active" data-tab="upload">⚡ Tải lên &amp; Tính điểm (1-Click)</button>
+      <button class="tab" data-tab="gradebook">📊 Sổ điểm hiện tại</button>
+      <button class="tab" data-tab="archive">📁 Kho lưu trữ bảng điểm (<span id="archiveCount">0</span>)</button>
+      <button class="tab" data-tab="rubric">📋 Rubric &amp; CLO</button>
+      <button class="tab" data-tab="settings">⚙️ Công thức &amp; Thiết lập</button>
+    </nav>
+
+    <div id="screen" aria-live="polite"></div>
+
+    <div class="footer">
+      <div>💾 Dữ liệu được lưu trữ an toàn trong <b>IndexedDB</b> máy tính cá nhân.</div>
+      <div>Phiên bản 2.2 (Giai đoạn 3 &amp; 5: Excel Export &amp; Tối ưu giao diện)</div>
+    </div>
+  </main>
+
+  <!-- Modal chung -->
+  <dialog id="modal" aria-label="Nhập dữ liệu"><div class="dialog-body" id="modalBody"></div></dialog>
+  
+  <!-- Inputs ẩn -->
+  <input type="file" accept=".xlsx,.xls,.csv" id="excelFileInput" hidden>
+  <input type="file" accept=".json,application/json" id="importBackupInput" hidden>
+
+  <!-- Toast thông báo -->
+  <div id="toast">Thông báo</div>
+
+  <!-- Nạp Thư viện Excel & Database -->
+  <script src="js/xlsx.full.min.js"></script>
+  <script src="js/excel.js"></script>
+  <script src="js/db.js"></script>
+
+  <script>
+    'use strict';
+    const SESSION_COUNT = 11;
+    const defaultData = () => ({
+      id: 'gb_default_demo',
+      title: 'Lớp Quản trị kênh phân phối - Demo',
+      course: 'Quản trị kênh phân phối (312121)',
+      weights: {self:30, mid:20, work:80, attendance:15, activity:5},
+      cap: 8.5, bonusUnit: 0.2, bonusCap: 1, sessionsDone: 3,
+      criteria: [
+        {id:'c1', name:'Vai trò và khái niệm kênh phân phối', clo:'121-K1', max:1.5},
+        {id:'c2', name:'Phân tích môi trường kênh', clo:'121-K2', max:2},
+        {id:'c3', name:'Thiết kế và lựa chọn cấu trúc kênh', clo:'121-K3', max:2.5},
+        {id:'c4', name:'Ứng dụng công nghệ và TMĐT', clo:'121-K4', max:2},
+        {id:'c5', name:'Lập luận và minh chứng', clo:'CLO kỹ năng', max:2}
+      ],
+      students:[
+        {id:'SV001', name:'Sinh viên A', group:'Nhóm 1', mid:7.5, activity:8, bonuses:1, attendance:[true,true,true,...Array(8).fill(null)]},
+        {id:'SV002', name:'Sinh viên B', group:'Nhóm 1', mid:8, activity:7, bonuses:0, attendance:[true,true,false,...Array(8).fill(null)]},
+        {id:'SV003', name:'Sinh viên C', group:'Nhóm 2', mid:6.5, activity:8, bonuses:2, attendance:[true,false,true,...Array(8).fill(null)]},
+        {id:'SV004', name:'Sinh viên D', group:'Nhóm 2', mid:7, activity:9, bonuses:1, attendance:[true,true,true,...Array(8).fill(null)]}
+      ],
+      groupScores: {
+        'G:Nhóm 1': {c1:1.5, c2:1.5, c3:2, c4:1, c5:1.5},
+        'G:Nhóm 2': {c1:1, c2:1.5, c3:1.5, c4:1.5, c5:1.5}
+      }
+    });
+
+    const $ = (selector) => document.querySelector(selector);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const numeric = (v) => v === '' || v === null || v === undefined ? null : Number(v);
+    const fmt = (v, digits=2) => Number.isFinite(v) ? v.toLocaleString('vi-VN',{minimumFractionDigits:digits,maximumFractionDigits:digits}) : '—';
+    const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
+
+    let data = defaultData();
+    let currentTab = 'upload';
+    let savedGradebooks = [];
+    let parsedExcelData = null;
+    let searchQuery = '';
+    let filterStatus = 'all';
+
+    function showToast(msg, isSuccess = true) {
+      const toast = $('#toast');
+      toast.textContent = msg;
+      toast.className = 'show ' + (isSuccess ? 'success' : '');
+      setTimeout(() => { toast.className = ''; }, 2800);
+    }
+
+    async function initApp() {
+      try {
+        await GradebookDB.init();
+        await GradebookDB.migrateFromLocalStorage();
+        savedGradebooks = await GradebookDB.getAllGradebooks();
+        updateArchiveCounter();
+
+        if (savedGradebooks.length > 0) {
+          data = savedGradebooks[0];
+        } else {
+          await GradebookDB.saveGradebook(data);
+          savedGradebooks = await GradebookDB.getAllGradebooks();
+          updateArchiveCounter();
+        }
+      } catch (err) {
+        console.error('Lỗi DB:', err);
+        $('#dbStatusBadge').textContent = '⚠️ Lỗi cơ sở dữ liệu';
+        $('#dbStatusBadge').style.background = '#8b292940';
+      }
+      render();
+    }
+
+    function updateArchiveCounter() {
+      $('#archiveCount').textContent = savedGradebooks.length;
+    }
+
+    let persistDebounce = null;
+    async function persist(silent = false) {
+      clearTimeout(persistDebounce);
+      persistDebounce = setTimeout(async () => {
+        try {
+          data.studentCount = data.students.length;
+          data.updatedAt = new Date().toISOString();
+          await GradebookDB.saveGradebook(data);
+          savedGradebooks = await GradebookDB.getAllGradebooks();
+          updateArchiveCounter();
+          if (!silent) showToast('✅ Đã lưu bền vững vào cơ sở dữ liệu!');
+        } catch (err) {
+          console.error('Lỗi lưu:', err);
+          showToast('❌ Không thể lưu vào cơ sở dữ liệu: ' + err.message, false);
+        }
+      }, 250);
+    }
+
+    const groupKey = student => student.group.trim() ? `G:${student.group.trim()}` : `S:${student.id}`;
+    const groupLabel = student => student.group.trim() || `Bài cá nhân: ${student.id}`;
+    function isValidConfig() { const w=data.weights; return Math.abs(w.self+w.mid-50)<.0001 && Math.abs(w.work+w.attendance+w.activity-100)<.0001 && data.criteria.every(c=>c.max>0) && data.criteria.length>0;}
+    
+    function assignment(student) {
+      const scores=data.groupScores[groupKey(student)];
+      if (!scores || !data.criteria.length) return null;
+      const max=data.criteria.reduce((sum,c)=>sum+Number(c.max),0);
+      if (max<=0 || data.criteria.some(c=>!Number.isFinite(Number(scores[c.id])) || scores[c.id]===null || scores[c.id]===undefined || scores[c.id]==='')) return null;
+      const earned=data.criteria.reduce((sum,c)=>sum+clamp(Number(scores[c.id]),0,Number(c.max)),0);
+      return Math.min(Number(data.cap),10*earned/max);
+    }
+    
+    function attendance(student) {
+      const count=Number(data.sessionsDone);
+      if (count===0) return null;
+      const first=student.attendance.slice(0,count);
+      if (first.length!==count || first.some(v=>v===null || v===undefined)) return null;
+      return 10*first.filter(v=>v===true).length/count;
+    }
+    
+    function summarize(student) {
+      const a=assignment(student), d=attendance(student), p=numeric(student.activity), m=numeric(student.mid);
+      const bonus=Math.min(Number(data.bonusCap),Number(student.bonuses||0)*Number(data.bonusUnit));
+      const self=a===null||d===null||p===null||!isValidConfig()?null:Math.min(10, a*data.weights.work/100 + d*data.weights.attendance/100 + p*data.weights.activity/100 + bonus);
+      const total=self===null||m===null||!isValidConfig()?null:(self*data.weights.self+m*data.weights.mid)/100;
+      return {a,d,p,m,bonus,self,total};
+    }
+
+    function render() {
+      document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === currentTab));
+      $('#heroTitle').textContent = data.title || data.course || 'CLO Gradebook';
+
+      if(currentTab === 'upload') renderUpload();
+      if(currentTab === 'gradebook') renderGradebook();
+      if(currentTab === 'archive') renderArchive();
+      if(currentTab === 'rubric') renderRubric();
+      if(currentTab === 'settings') renderSettings();
+    }
+
+    // ==================================================
+    // MÀN HÌNH TẢI FILE EXCEL & TÍNH ĐIỂM 1-CLICK (UPLOAD)
+    // ==================================================
+    function renderUpload() {
+      const headerOptions = (selectedIdx) => {
+        if (!parsedExcelData) return '';
+        let opts = `<option value="-1">-- Không dùng cột này --</option>`;
+        parsedExcelData.headers.forEach((h, idx) => {
+          opts += `<option value="${idx}" ${idx === selectedIdx ? 'selected' : ''}>Cột [${idx + 1}]: ${esc(h || '(Không có tên)')}</option>`;
+        });
+        return opts;
+      };
+
+      $('#screen').innerHTML = `
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <h2>⚡ Tải lên file điểm &amp; Tính điểm tự động (1-Click)</h2>
+              <div class="muted">Hỗ trợ file Excel (.xlsx, .xls) hoặc .csv tải từ hệ thống đào tạo của trường.</div>
+            </div>
+            <button class="btn outline" data-action="downloadSampleExcel">📥 Tải file Excel mẫu chuẩn</button>
+          </div>
+
+          <div class="dropzone" id="dropzone">
+            <span class="dropzone-icon">📊</span>
+            <h3>Kéo thả file điểm Excel vào đây</h3>
+            <p>hoặc nhấp chuột vào khu vực này để chọn file từ máy tính (.xlsx, .xls, .csv)</p>
+          </div>
+
+          ${parsedExcelData ? `
+            <div class="mapping-box">
+              <div class="section-head">
+                <div>
+                  <h3 style="margin:0">📄 File: <span style="color:#245e9d">${esc(parsedExcelData.fileName)}</span></h3>
+                  <div class="muted">Đã tìm thấy <b>${parsedExcelData.rawRows.length}</b> dòng sinh viên trong Sheet [${esc(parsedExcelData.sheetName)}].</div>
+                </div>
+                <span class="badge ok">Đã tự động nhận diện cột</span>
+              </div>
+
+              <div class="hint">Hệ thống đã tự động khớp các cột dựa trên tiêu đề file của bạn. Bạn có thể kiểm tra hoặc điều chỉnh nhanh bên dưới:</div>
+
+              <form id="mappingForm" class="grid3">
+                <div>
+                  <label for="colId">Cột Mã Sinh Viên</label>
+                  <select id="colId" name="idCol">${headerOptions(parsedExcelData.detectedMapping.idCol)}</select>
+                </div>
+                <div>
+                  <label for="colName">Cột Họ và Tên (hoặc Họ lót)</label>
+                  <select id="colName" name="nameCol">${headerOptions(parsedExcelData.detectedMapping.nameCol !== -1 ? parsedExcelData.detectedMapping.nameCol : parsedExcelData.detectedMapping.lastNameCol)}</select>
+                </div>
+                <div>
+                  <label for="colFirstName">Cột Tên riêng (nếu tách rời)</label>
+                  <select id="colFirstName" name="firstNameCol">${headerOptions(parsedExcelData.detectedMapping.firstNameCol)}</select>
+                </div>
+                <div>
+                  <label for="colGroup">Cột Nhóm / Lớp</label>
+                  <select id="colGroup" name="groupCol">${headerOptions(parsedExcelData.detectedMapping.groupCol)}</select>
+                </div>
+                <div>
+                  <label for="colActivity">Cột Điểm Chuyên cần / Tham gia</label>
+                  <select id="colActivity" name="activityCol">${headerOptions(parsedExcelData.detectedMapping.activityCol)}</select>
+                </div>
+                <div>
+                  <label for="colMid">Cột Điểm Giữa Kỳ</label>
+                  <select id="colMid" name="midCol">${headerOptions(parsedExcelData.detectedMapping.midCol)}</select>
+                </div>
+              </form>
+
+              <div style="margin-top:20px;border-top:1px solid #e2e8f2;padding-top:16px">
+                <div class="grid2">
+                  <div>
+                    <label for="importCourseTitle">Tên lớp / Bảng điểm lưu</label>
+                    <input id="importCourseTitle" class="wide" value="${esc(parsedExcelData.fileName.replace(/\.[^/.]+$/, ""))}">
+                  </div>
+                  <div>
+                    <label for="importCourseName">Tên môn học</label>
+                    <input id="importCourseName" class="wide" value="${esc(data.course || 'Quản trị kênh phân phối')}">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Xem trước 5 dòng đầu -->
+              <div style="margin-top:20px">
+                <h4 style="margin:0 0 8px;font-size:13px;color:#5c7190">Xem trước 5 dòng dữ liệu đầu tiên từ file:</h4>
+                <div class="table-wrap">
+                  <table style="font-size:12px">
+                    <thead>
+                      <tr>${parsedExcelData.headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>
+                      ${parsedExcelData.previewRows.map(row => `
+                        <tr>${parsedExcelData.headers.map((_, i) => `<td>${esc(row[i] ?? '')}</td>`).join('')}</tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Nút hành động 1-Click duy nhất -->
+              <div style="margin-top:24px;text-align:center">
+                <button class="btn success large" id="btnExecuteGenerate">
+                  ⚡ TÍNH ĐIỂM &amp; LƯU VÀO KHO (1-CLICK)
+                </button>
+              </div>
+            </div>
+          ` : ''}
+        </section>
+      `;
+
+      setupDropzoneEvents();
+    }
+
+    function setupDropzoneEvents() {
+      const dropzone = $('#dropzone');
+      if (!dropzone) return;
+
+      dropzone.addEventListener('click', () => {
+        $('#excelFileInput').click();
+      });
+
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files.length) {
+          handleExcelFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    async function handleExcelFile(file) {
+      try {
+        showToast('Đang đọc dữ liệu file Excel...');
+        const parsed = await ExcelParser.parseFile(file);
+        parsedExcelData = parsed;
+        showToast(`Đã nhận diện ${parsed.rawRows.length} dòng dữ liệu sinh viên!`);
+        renderUpload();
+      } catch (err) {
+        alert('Lỗi đọc file Excel: ' + err.message);
+      }
+    }
+
+    // ==================================================
+    // MÀN HÌNH SỔ ĐIỂM (GRADEBOOK)
+    // ==================================================
+    function renderGradebook() {
+      const totals=data.students.map(s=>summarize(s).total).filter(v=>v!==null);
+      const average=totals.length?totals.reduce((a,b)=>a+b,0)/totals.length:null;
+      const passCount = totals.filter(t => t >= 2.5).length;
+      const passRate = totals.length ? ((passCount / totals.length) * 100).toFixed(1) + '%' : '—';
+      const groupCount=new Set(data.students.map(groupKey)).size;
+      const configAlert=isValidConfig()?'':`<div class="hint error">Tỷ trọng chưa hợp lệ hoặc rubric có tiêu chí thiếu điểm tối đa. Hãy kiểm tra trong phần Thiết lập và Rubric.</div>`;
+      
+      // Lọc sinh viên theo ô tìm kiếm và bộ lọc trạng thái
+      let filteredStudents = data.students.filter(s => {
+        const matchesSearch = !searchQuery || 
+          s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          s.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (s.group && s.group.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        if (!matchesSearch) return false;
+
+        const r = summarize(s);
+        if (filterStatus === 'missing') return r.total === null;
+        if (filterStatus === 'warning') return r.total !== null && r.total < 2.5;
+        if (filterStatus === 'pass') return r.total !== null && r.total >= 2.5;
+        return true;
+      });
+
+      $('#screen').innerHTML=`
+        <div class="cards">
+          <div class="stat"><span>Tổng sinh viên</span><strong>${data.students.length}</strong></div>
+          <div class="stat"><span>Đã đủ dữ liệu tính</span><strong>${totals.length}/${data.students.length}</strong></div>
+          <div class="stat"><span>Trung bình điểm 50%</span><strong>${fmt(average)}/5</strong></div>
+          <div class="stat"><span>Tỷ lệ Đạt (&ge; 2.5/5)</span><strong class="${passCount===totals.length?'ok':'warn'}">${passRate}</strong></div>
+        </div>
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <h2>${esc(data.title || data.course)}</h2>
+              <div class="muted">Môn: <b>${esc(data.course)}</b> · Tự học: ${fmt(data.weights.self,0)}% · Giữa kỳ: ${fmt(data.weights.mid,0)}% · Điểm danh: ${data.sessionsDone}/${SESSION_COUNT} buổi</div>
+            </div>
+            <div class="toolbar">
+              <button class="btn success" data-action="exportExcel">📥 Xuất file Excel (.xlsx)</button>
+              <button class="btn secondary" data-action="exportCsv">Xuất CSV</button>
+              <button class="btn highlight" data-action="goToUpload">⚡ Tải file Excel khác</button>
+              <button class="btn outline" data-action="saveNow">💾 Lưu lại ngay</button>
+            </div>
+          </div>
+          ${configAlert}
+
+          <!-- Thanh tìm kiếm và lọc -->
+          <div class="filter-bar">
+            <input type="text" class="search-input" id="searchBox" placeholder="🔍 Tìm kiếm sinh viên theo tên hoặc mã số..." value="${esc(searchQuery)}">
+            <div>
+              <label style="display:inline;margin-right:6px">Lọc:</label>
+              <select id="statusFilter" style="padding:7px 10px">
+                <option value="all" ${filterStatus==='all'?'selected':''}>Tất cả (${data.students.length})</option>
+                <option value="pass" ${filterStatus==='pass'?'selected':''}>Đạt điểm &ge; 2.5 (${passCount})</option>
+                <option value="warning" ${filterStatus==='warning'?'selected':''}>Cần lưu ý &lt; 2.5 (${totals.length - passCount})</option>
+                <option value="missing" ${filterStatus==='missing'?'selected':''}>Thiếu đầu điểm (${data.students.length - totals.length})</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap"><table>
+            <thead><tr><th>Mã SV</th><th>Họ tên</th><th>Nhóm</th><th class="num">Bài tự học /10</th><th class="num">Điểm danh /10</th><th class="num">Tham gia /10</th><th class="num">Lượt cộng</th><th class="num">Giữa kỳ /10</th><th class="num">Điểm 30% /10</th><th class="num">Đóng góp 50% /5</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody>${filteredStudents.length?filteredStudents.map(s=>{
+              const r=summarize(s);
+              const isWarning = r.total !== null && r.total < 2.5;
+              const isMissing = r.total === null;
+              return `<tr>
+                <td>${esc(s.id)}</td><td><b>${esc(s.name)}</b></td><td>${esc(s.group||'Cá nhân')}</td>
+                <td class="num">${fmt(r.a)}</td><td class="num">${fmt(r.d)}</td>
+                <td class="num"><input aria-label="Điểm tham gia của ${esc(s.name)}" type="number" min="0" max="10" step="0.1" value="${s.activity??''}" data-student="${esc(s.id)}" data-field="activity"></td>
+                <td class="num"><input aria-label="Lượt cộng của ${esc(s.name)}" type="number" min="0" max="30" step="1" value="${s.bonuses??0}" data-student="${esc(s.id)}" data-field="bonuses"></td>
+                <td class="num"><input aria-label="Điểm giữa kỳ của ${esc(s.name)}" type="number" min="0" max="10" step="0.1" value="${s.mid??''}" data-student="${esc(s.id)}" data-field="mid"></td>
+                <td class="num"><b>${fmt(r.self)}</b></td>
+                <td class="num score ${isWarning?'warning-score':''}">${fmt(r.total)}</td>
+                <td>
+                  ${isMissing ? '<span class="badge wait">Thiếu điểm</span>' : (isWarning ? '<span class="badge danger">&lt; 2.5</span>' : '<span class="badge ok">Đạt</span>')}
+                </td>
+                <td><div class="actions"><button class="btn tiny" data-action="grade" data-id="${esc(s.id)}">Chấm bài</button><button class="btn tiny secondary" data-action="attendance" data-id="${esc(s.id)}">Điểm danh</button><button class="btn tiny danger" data-action="removeStudent" data-id="${esc(s.id)}">Xóa</button></div></td></tr>`;
+            }).join(''):`<tr><td colspan="12" class="empty">Không tìm thấy sinh viên nào phù hợp với bộ lọc.</td></tr>`}</tbody>
+          </table></div>
+          <form id="addStudentForm" class="form-row">
+            <div><label for="sid">Mã sinh viên</label><input id="sid" required maxlength="30" placeholder="SV005"></div>
+            <div><label for="sname">Họ và tên</label><input id="sname" required maxlength="100" placeholder="Sinh viên E" style="min-width:185px"></div>
+            <div><label for="sgroup">Nhóm (có thể để trống)</label><input id="sgroup" maxlength="60" placeholder="Nhóm 3"></div>
+            <button type="submit" class="btn">+ Thêm sinh viên</button>
+          </form>
+        </section>`;
+
+      // Gắn sự kiện tìm kiếm và lọc
+      $('#searchBox')?.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim();
+        renderGradebook();
+      });
+
+      $('#statusFilter')?.addEventListener('change', (e) => {
+        filterStatus = e.target.value;
+        renderGradebook();
+      });
+    }
+
+    // ==================================================
+    // MÀN HÌNH KHO LƯU TRỮ BẢNG ĐIỂM (ARCHIVE)
+    // ==================================================
+    function renderArchive() {
+      const cardsHtml = savedGradebooks.map(gb => {
+        const isActive = gb.id === data.id;
+        const updatedDate = new Date(gb.updatedAt || gb.createdAt || Date.now()).toLocaleString('vi-VN');
+        return `
+          <div class="archive-card ${isActive ? 'active' : ''}">
+            <div class="archive-head">
+              <div style="display:flex;justify-content:space-between;align-items:start">
+                <h3>${esc(gb.title || gb.course || 'Bảng điểm chưa đặt tên')}</h3>
+                ${isActive ? '<span class="badge ok">Đang mở</span>' : ''}
+              </div>
+              <div class="archive-meta">
+                <span>📚 Môn: <b>${esc(gb.course || 'Chưa đặt tên môn')}</b></span>
+                <span>🕒 Cập nhật: ${updatedDate}</span>
+              </div>
+            </div>
+            <div class="archive-stats">
+              <div>Sĩ số: <b>${gb.students ? gb.students.length : (gb.studentCount || 0)}</b> SV</div>
+              <div>·</div>
+              <div>Trọng số: <b>${gb.weights ? gb.weights.self + '/' + gb.weights.mid : '—'}</b></div>
+            </div>
+            <div class="archive-actions">
+              ${!isActive ? `<button class="btn tiny secondary" data-action="switchGradebook" data-id="${esc(gb.id)}">📂 Mở lớp này</button>` : ''}
+              <button class="btn tiny success" data-action="exportSingleArchive" data-id="${esc(gb.id)}">📥 Tải Excel</button>
+              <button class="btn tiny outline" data-action="renameGradebook" data-id="${esc(gb.id)}">✏️ Đổi tên</button>
+              <button class="btn tiny danger" data-action="deleteSavedGradebook" data-id="${esc(gb.id)}">🗑️ Xóa</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      $('#screen').innerHTML = `
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <h2>📁 Kho lưu trữ bảng điểm (Cơ sở dữ liệu bền vững)</h2>
+              <div class="muted">Toàn bộ bảng điểm đã tính được lưu an toàn trong IndexedDB của máy tính này, không bao giờ bị mất khi đóng trình duyệt.</div>
+            </div>
+            <div class="toolbar">
+              <button class="btn highlight" data-action="goToUpload">⚡ Tải file Excel mới</button>
+              <button class="btn outline" data-action="exportFullBackup">📦 Tải file sao lưu (.json)</button>
+              <button class="btn outline" data-action="importFullBackup">📥 Khôi phục từ file</button>
+            </div>
+          </div>
+
+          ${savedGradebooks.length ? `<div class="archive-grid">${cardsHtml}</div>` : `
+            <div class="empty">
+              <p>Chưa có bảng điểm nào được lưu trong kho.</p>
+              <button class="btn highlight" data-action="goToUpload">⚡ Tải file Excel để tính bảng điểm đầu tiên</button>
+            </div>
+          `}
+        </section>
+      `;
+    }
+
+    function renderRubric() {
+      const maxSum=data.criteria.reduce((a,c)=>a+Number(c.max||0),0);
+      $('#screen').innerHTML=`<section class="panel">
+        <div class="section-head"><div><h2>Thiết kế rubric liên kết CLO</h2><div class="muted">Danh sách tiêu chí mẫu để giảng viên điều chỉnh.</div></div><span class="badge ${Math.abs(maxSum-10)<.001?'ok':'wait'}">Tổng ${fmt(maxSum,1)} điểm</span></div>
+        <div class="hint">Điểm bài được quy đổi về thang 10 dựa vào tổng điểm tối đa của rubric. Mọi thay đổi sẽ <b>tự động lưu vào cơ sở dữ liệu</b>.</div>
+        <div class="table-wrap"><table style="min-width:740px"><thead><tr><th>Tiêu chí</th><th>Mã CLO liên kết</th><th class="num">Điểm tối đa</th><th></th></tr></thead><tbody>
+        ${data.criteria.map(c=>`<tr><td><input class="wide" value="${esc(c.name)}" data-criterion="${esc(c.id)}" data-field="name" aria-label="Tên tiêu chí"></td><td><input style="width:195px" value="${esc(c.clo)}" data-criterion="${esc(c.id)}" data-field="clo" aria-label="CLO liên kết"></td><td class="num"><input type="number" step="0.1" min="0.1" max="10" value="${c.max}" data-criterion="${esc(c.id)}" data-field="max" aria-label="Điểm tối đa"></td><td><button class="btn danger tiny" data-action="removeCriterion" data-id="${esc(c.id)}">Xóa</button></td></tr>`).join('')}
+        </tbody></table></div>
+        <div class="toolbar" style="margin-top:15px"><button class="btn" data-action="addCriterion">+ Thêm tiêu chí</button></div>
+      </section>`;
+    }
+
+    function inputField(label,name,value,opts={}) {return `<div><label for="${name}">${esc(label)}</label><input id="${name}" data-setting="${name}" type="${opts.type||'number'}" ${opts.type==='text'?'':`min="${opts.min??0}" max="${opts.max??100}" step="${opts.step??1}"`} value="${esc(value)}" ${opts.type==='text'?'style="width:100%"':''}></div>`;}
+    
+    function renderSettings() {
+      const total=data.weights.self+data.weights.mid; const sub=data.weights.work+data.weights.attendance+data.weights.activity;
+      $('#screen').innerHTML=`
+        <div class="grid2"><section class="panel"><h2>1. Cơ cấu 50% điểm quá trình</h2><div class="grid2">
+        ${inputField('Bài tự học / bài tập (%)','self',data.weights.self)}
+        ${inputField('Giữa kỳ (%)','mid',data.weights.mid)}
+        </div><div class="hint ${total!==50?'error':''}">Tổng: <b>${fmt(total,0)}%</b> — phải bằng 50%.</div></section>
+        <section class="panel"><h2>2. Tỷ trọng bên trong điểm tự học</h2><div class="grid3">
+        ${inputField('Bài theo rubric (%)','work',data.weights.work)}
+        ${inputField('Điểm danh (%)','attendance',data.weights.attendance)}
+        ${inputField('Tham gia (%)','activity',data.weights.activity)}
+        </div><div class="hint ${sub!==100?'error':''}">Tổng: <b>${fmt(sub,0)}%</b> — phải bằng 100% (chưa gồm lượt cộng).</div></section></div>
+        <div class="grid2" style="margin-top:16px"><section class="panel"><h2>3. Điểm danh và lượt cộng</h2><div class="grid2">
+        ${inputField(`Số buổi đã học (0–${SESSION_COUNT})`,'sessionsDone',data.sessionsDone,{max:SESSION_COUNT})}
+        ${inputField('Điểm mỗi lượt cộng','bonusUnit',data.bonusUnit,{max:10,step:.1})}
+        ${inputField('Trần điểm cộng','bonusCap',data.bonusCap,{max:10,step:.1})}
+        ${inputField('Giới hạn điểm bài theo rubric','cap',data.cap,{max:10,step:.1,min:.1})}
+        </div></section>
+        <section class="panel"><h2>4. Tên bảng điểm & Môn học</h2>
+        <div>${inputField('Tên lớp / Bảng điểm hiển thị','title',data.title || data.course,{type:'text'})}</div>
+        <div style="margin-top:10px">${inputField('Tên môn học chính thức','course',data.course,{type:'text'})}</div>
+        <div style="margin-top:15px"><button class="btn danger" data-action="reset">Khôi phục về dữ liệu mặc định</button></div>
+        </section></div>
+      `;
+    }
+
+    function openGrade(studentId) {
+      const student=data.students.find(s=>s.id===studentId); if(!student)return;
+      const key=groupKey(student),scores=data.groupScores[key]||{};
+      $('#modalBody').innerHTML=`<h2>Nhập điểm rubric — ${esc(groupLabel(student))}</h2>
+        <p class="muted">Tất cả sinh viên thuộc cùng nhóm nhận chung điểm bài. Mức tối đa mỗi tiêu chí do rubric quy định.</p>
+        <form id="gradeForm" data-key="${esc(key)}"><div class="criteria-list"><b>Tiêu chí</b><b>Mức tối đa</b><b>Điểm đạt</b>
+        ${data.criteria.map(c=>`<div><b>${esc(c.name)}</b><div class="muted">${esc(c.clo)}</div></div><div>${fmt(Number(c.max),1)}</div><div><input aria-label="${esc(c.name)}" data-score="${esc(c.id)}" type="number" min="0" max="${c.max}" step="0.1" value="${scores[c.id]??''}" required></div>`).join('')}
+        </div><div class="dialog-footer"><button type="button" class="btn secondary" data-action="closeModal">Hủy</button><button type="submit" class="btn">Lưu điểm</button></div></form>`;
+      $('#modal').showModal();
+    }
+
+    function openAttendance(studentId) {
+      const student=data.students.find(s=>s.id===studentId);if(!student)return;
+      $('#modalBody').innerHTML=`<h2>Điểm danh — ${esc(student.name)}</h2>
+      <p class="muted">Số buổi đã học: ${data.sessionsDone}/${SESSION_COUNT}. Các buổi chưa học sẽ không tính điểm.</p>
+      <form id="attendanceForm" data-id="${esc(student.id)}"><div class="session-grid">
+      ${Array.from({length:SESSION_COUNT},(_,i)=>`<div class="session-cell ${i>=data.sessionsDone?'future':''}"><label for="sess${i}">Buổi ${i+1}</label><select id="sess${i}" data-session="${i}" ${i>=data.sessionsDone?'disabled':''}>
+      <option value="" ${student.attendance[i]===null||student.attendance[i]===undefined?'selected':''}>Chưa ghi</option>
+      <option value="yes" ${student.attendance[i]===true?'selected':''}>Có mặt</option>
+      <option value="no" ${student.attendance[i]===false?'selected':''}>Vắng</option></select></div>`).join('')}
+      </div><div class="dialog-footer"><button type="button" class="btn secondary" data-action="closeModal">Hủy</button><button type="submit" class="btn">Lưu điểm danh</button></div></form>`;
+      $('#modal').showModal();
+    }
+
+    function download(name, content, mime) {const blob=new Blob([content],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    function csvCell(value) {
+      let s=value===null||value===undefined?'':String(value);
+      if (/^[\s]*[=+\-@]/.test(s))s="'"+s;
+      return '"'+s.replace(/"/g,'""')+'"';
+    }
+    function exportCsv() {
+      const headers=['Mã SV','Họ tên','Nhóm','Điểm bài /10','Điểm danh /10','Tham gia /10','Lượt cộng','Điểm cộng quy đổi','Giữa kỳ /10','Điểm thành phần tự học /10','Đóng góp điểm quá trình /5','Trạng thái'];
+      const rows=data.students.map(s=>{const r=summarize(s);return [s.id,s.name,s.group,r.a===null?'':fmt(r.a),r.d===null?'':fmt(r.d),r.p===null?'':fmt(r.p),s.bonuses,fmt(r.bonus),r.m===null?'':fmt(r.m),r.self===null?'':fmt(r.self),r.total===null?'':fmt(r.total),r.total===null?'Chưa đủ dữ liệu':'Tạm tính'];});
+      const content='\uFEFF'+[headers,...rows].map(row=>row.map(csvCell).join(';')).join('\r\n');
+      download(`${(data.title || 'bang_diem').replace(/\s+/g,'_')}.csv`,content,'text/csv;charset=utf-8');
+    }
+
+    // ==========================================
+    // SỰ KIỆN TƯƠNG TÁC
+    // ==========================================
+    document.addEventListener('click', async (event) => {
+      const tab = event.target.closest('[data-tab]');
+      if (tab) {
+        currentTab = tab.dataset.tab;
+        if (currentTab === 'archive') {
+          savedGradebooks = await GradebookDB.getAllGradebooks();
+          updateArchiveCounter();
+        }
+        render();
+        return;
+      }
+
+      const btn = event.target.closest('[data-action], #btnExecuteGenerate');
+      if (!btn) return;
+
+      // Nút bấm 1-Click: Tính điểm & Lưu vào kho
+      if (btn.id === 'btnExecuteGenerate') {
+        if (!parsedExcelData) return;
+
+        const mapping = {
+          idCol: Number($('#colId')?.value ?? -1),
+          nameCol: Number($('#colName')?.value ?? -1),
+          firstNameCol: Number($('#colFirstName')?.value ?? -1),
+          groupCol: Number($('#colGroup')?.value ?? -1),
+          activityCol: Number($('#colActivity')?.value ?? -1),
+          midCol: Number($('#colMid')?.value ?? -1),
+          bonusesCol: -1
+        };
+
+        const extractedStudents = ExcelParser.extractStudents(parsedExcelData.rawRows, mapping, SESSION_COUNT);
+        if (extractedStudents.length === 0) {
+          alert('Không tìm thấy dòng dữ liệu sinh viên nào.');
+          return;
+        }
+
+        const title = ($('#importCourseTitle')?.value || parsedExcelData.fileName.replace(/\.[^/.]+$/, "")).trim();
+        const course = ($('#importCourseName')?.value || data.course).trim();
+
+        const newGradebook = JSON.parse(JSON.stringify(data));
+        newGradebook.id = 'gb_' + Date.now();
+        newGradebook.title = title;
+        newGradebook.course = course;
+        newGradebook.students = extractedStudents;
+        newGradebook.groupScores = {};
+        newGradebook.createdAt = new Date().toISOString();
+        newGradebook.updatedAt = new Date().toISOString();
+
+        data = newGradebook;
+        await GradebookDB.saveGradebook(data);
+        savedGradebooks = await GradebookDB.getAllGradebooks();
+        updateArchiveCounter();
+
+        currentTab = 'gradebook';
+        showToast(`🎉 Đã tính điểm và lưu thành công ${extractedStudents.length} sinh viên vào Kho!`);
+        render();
+        return;
+      }
+
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+
+      if (action === 'exportExcel') {
+        ExcelParser.exportGradebookToExcel(data, summarize);
+        showToast('📥 Đã tải file Excel (.xlsx) chuẩn thành công!');
+      }
+
+      if (action === 'exportSingleArchive') {
+        const target = await GradebookDB.getGradebook(id);
+        if (target) {
+          ExcelParser.exportGradebookToExcel(target, summarize);
+          showToast(`📥 Đã tải file Excel cho lớp: ${target.title || target.course}`);
+        }
+      }
+
+      if (action === 'downloadSampleExcel') {
+        ExcelParser.downloadSampleFile();
+      }
+
+      if (action === 'goToUpload') {
+        currentTab = 'upload';
+        render();
+      }
+
+      if (action === 'grade') openGrade(id);
+      if (action === 'attendance') openAttendance(id);
+      if (action === 'closeModal') $('#modal').close();
+
+      if (action === 'saveNow') {
+        await persist(false);
+      }
+
+      if (action === 'switchGradebook') {
+        const target = await GradebookDB.getGradebook(id);
+        if (target) {
+          data = target;
+          currentTab = 'gradebook';
+          showToast(`Đã mở bảng điểm: ${data.title || data.course}`);
+          render();
+        }
+      }
+
+      if (action === 'renameGradebook') {
+        const target = savedGradebooks.find(g => g.id === id);
+        if (!target) return;
+        const newTitle = prompt('Đổi tên bảng điểm:', target.title || target.course);
+        if (newTitle && newTitle.trim()) {
+          target.title = newTitle.trim();
+          await GradebookDB.saveGradebook(target);
+          if (data.id === id) data.title = newTitle.trim();
+          savedGradebooks = await GradebookDB.getAllGradebooks();
+          showToast('Đã đổi tên thành công.');
+          render();
+        }
+      }
+
+      if (action === 'deleteSavedGradebook') {
+        if (confirm('Bạn có chắc chắn muốn xóa bảng điểm này khỏi kho lưu trữ? Thao tác không thể hoàn tác.')) {
+          await GradebookDB.deleteGradebook(id);
+          savedGradebooks = await GradebookDB.getAllGradebooks();
+          updateArchiveCounter();
+          if (data.id === id) {
+            data = savedGradebooks.length ? savedGradebooks[0] : defaultData();
+          }
+          showToast('Đã xóa bảng điểm khỏi cơ sở dữ liệu.');
+          render();
+        }
+      }
+
+      if (action === 'exportFullBackup') {
+        const json = await GradebookDB.exportBackup();
+        download(`sao_luu_tat_ca_bang_diem_${new Date().toISOString().slice(0,10)}.json`, json, 'application/json');
+        showToast('Đã tải file sao lưu toàn bộ kho dữ liệu.');
+      }
+
+      if (action === 'importFullBackup') {
+        $('#importBackupInput').click();
+      }
+
+      if (action === 'addCriterion') {
+        data.criteria.push({id:'c'+Date.now(), name:'Tiêu chí mới', clo:'CLO chưa gán', max:1});
+        persist();
+        render();
+      }
+
+      if (action === 'removeCriterion' && data.criteria.length > 1 && confirm('Xóa tiêu chí này? Điểm bài sẽ được tính lại.')) {
+        data.criteria = data.criteria.filter(c => c.id !== id);
+        persist();
+        render();
+      }
+
+      if (action === 'removeStudent' && confirm('Xóa sinh viên '+id+' khỏi sổ điểm?')) {
+        data.students = data.students.filter(s => s.id !== id);
+        persist();
+        render();
+      }
+
+      if (action === 'exportCsv') exportCsv();
+      if (action === 'reset' && confirm('Khôi phục về dữ liệu mặc định? Bảng điểm hiện tại sẽ được làm mới.')) {
+        data = defaultData();
+        persist();
+        render();
+      }
+    });
+
+    document.addEventListener('change', (event) => {
+      const input = event.target;
+      if (input.id === 'excelFileInput') {
+        if (input.files && input.files.length) {
+          handleExcelFile(input.files[0]);
+        }
+        input.value = '';
+        return;
+      }
+
+      if (input.id === 'importBackupInput') {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const res = await GradebookDB.importBackup(reader.result);
+            savedGradebooks = await GradebookDB.getAllGradebooks();
+            if (savedGradebooks.length) data = savedGradebooks[0];
+            updateArchiveCounter();
+            showToast(`Khôi phục thành công ${res.gradebooksCount} bảng điểm!`);
+            render();
+          } catch (err) {
+            alert('Lỗi khôi phục: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+        input.value = '';
+        return;
+      }
+
+      if (input.dataset.student) {
+        const s = data.students.find(s => s.id === input.dataset.student);
+        if (!s) return;
+        const field = input.dataset.field;
+        const v = numeric(input.value);
+        if (v !== null && (!Number.isFinite(v) || v < 0 || v > (field === 'bonuses' ? 30 : 10) || field === 'bonuses' && !Number.isInteger(v))) {
+          alert('Hãy nhập số hợp lệ trong khoảng cho phép.');
+          render();
+          return;
+        }
+        s[field] = field === 'bonuses' ? (v ?? 0) : v;
+        persist();
+        render();
+        return;
+      }
+
+      if (input.dataset.criterion) {
+        const c = data.criteria.find(c => c.id === input.dataset.criterion);
+        if (!c) return;
+        const field = input.dataset.field;
+        if (field === 'max') {
+          const v = numeric(input.value);
+          if (v === null || !Number.isFinite(v) || v <= 0 || v > 10) {
+            alert('Điểm tối đa phải lớn hơn 0 và không quá 10.');
+            render();
+            return;
+          }
+          c.max = v;
+        } else {
+          c[field] = input.value.trim();
+        }
+        persist();
+        render();
+        return;
+      }
+
+      if (input.dataset.setting) {
+        const k = input.dataset.setting;
+        if (k === 'course' || k === 'title') {
+          data[k] = input.value.trim() || 'Chưa đặt tên';
+        } else {
+          let v = numeric(input.value);
+          const min = k === 'cap' ? 0.1 : 0;
+          const max = k === 'sessionsDone' ? SESSION_COUNT : 100;
+          if (v === null || !Number.isFinite(v) || v < min || v > max || (k === 'sessionsDone' && !Number.isInteger(v))) {
+            alert('Giá trị thiết lập không hợp lệ.');
+            render();
+            return;
+          }
+          if (k in data.weights) data.weights[k] = v;
+          else data[k] = v;
+        }
+        persist();
+        render();
+        return;
+      }
+    });
+
+    document.addEventListener('submit', (event) => {
+      if (!['addStudentForm', 'gradeForm', 'attendanceForm'].includes(event.target.id)) return;
+      event.preventDefault();
+      const form = event.target;
+
+      if (form.id === 'addStudentForm') {
+        const id = $('#sid').value.trim(), name = $('#sname').value.trim(), group = $('#sgroup').value.trim();
+        if (!id || !name) { alert('Cần nhập mã và họ tên.'); return; }
+        if (data.students.some(s => s.id.toLocaleLowerCase() === id.toLocaleLowerCase())) { alert('Mã sinh viên đã tồn tại.'); return; }
+        data.students.push({ id, name, group, mid: null, activity: null, bonuses: 0, attendance: Array(SESSION_COUNT).fill(null) });
+      }
+
+      if (form.id === 'gradeForm') {
+        const scores = {}; let ok = true;
+        form.querySelectorAll('[data-score]').forEach(input => {
+          const v = numeric(input.value);
+          if (v === null || !Number.isFinite(v) || v < 0 || v > Number(input.max)) ok = false;
+          else scores[input.dataset.score] = v;
+        });
+        if (!ok) { alert('Điểm từng tiêu chí phải nằm trong khoảng 0 đến mức tối đa.'); return; }
+        data.groupScores[form.dataset.key] = scores;
+        $('#modal').close();
+      }
+
+      if (form.id === 'attendanceForm') {
+        const s = data.students.find(s => s.id === form.dataset.id);
+        if (!s) return;
+        form.querySelectorAll('[data-session]').forEach(sel => {
+          if (!sel.disabled) s.attendance[Number(sel.dataset.session)] = sel.value === '' ? null : sel.value === 'yes';
+        });
+        $('#modal').close();
+      }
+
+      persist();
+      render();
+    });
+
+    $('#modal').addEventListener('click', (event) => { if (event.target === $('#modal')) $('#modal').close(); });
+
+    // Khởi động ứng dụng
+    initApp();
+  </script>
+</body>
+</html>
